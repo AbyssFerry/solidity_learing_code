@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.8; // ^0.8.8 ：表示其版本吧以上。   >=0.8.8 <0.9.0；表示大于等于这个版本小于那个版本
+
+contract SimpleStorage { //不给变量赋值，初始值为0
+/*
+    int256 a = -1;     
+    bool b = true;
+    uint256 c = 1;
+    string fname = "Abyss";
+    address id = 0xAc58AA47EE714cE8e883a27C47A463f8C52Ab147;
+    bytes32 lname = "Ferry";
+*/
+
+    // ---------关于普通变量创建与操作以及public的内涵----------
+    uint256 public favoriteNumber;  //这个其实也会被分配索引
+
+    // view, pure 声明的是只读函数，运行不需要gas，当然它们里面不能修改变量。
+    function retrieve() public view returns(uint256) {  //这个就同等与给favoriteNumber加上public.
+        return favoriteNumber;
+    }
+
+    // 特别的pure不能读取合约的变量，如
+    function addOneAndOne() public pure returns(uint256) {
+        return (1 + 1);
+    }
+
+    function store(uint256 _favoriteNumber) public{
+        favoriteNumber = _favoriteNumber;
+        retrieve();                                     //如果在非只读声明函数中调用只读函数，也会增加只读函数的汽油费。
+
+    }
+
+    //--------关于结构体，动态数组，以及映射函数的创建，和添加查找操作
+    People public person1 = People({favoriteNumber: 7, name: "Abyss"}); // 结构体变量赋值
+    People[] public people;                                             //建立People的动态数组
+    mapping (string => uint256) public nameTofavorteNumber;             //创建一个映射变量，没映射初始值都为0
+
+    struct People{                     //创建结构体
+        uint256 favoriteNumber;        //会为变量自动分配索引 这是0
+        string name;                   // 这是1
+        }
+
+    // 以下是三种变量储存类型
+    // calldata :临时变量只在调用函数时储存， 不能修改成别的值 ps：只有结构体，映射，数组需要 
+    // memory   ：临时变量只在调用函数时储存， 能修改成别的值 ps：只有结构体，映射，数组需要  //string实质就是bytes数组， 在函数中不给出会报错
+    // storage  :可被修改的永久变量
+    function addPerson(string memory _name, uint256 _favoriteNumber) public { //建立用于向people数组中添加元素的函数
+        //people.push(People(_favoriteNumber, _name));   //向people数组添加内容的一种方法， 方法1
+        // 放法2
+        People memory newPerson = People({favoriteNumber: _favoriteNumber, name : _name});
+        people.push(newPerson);
+        // 如下：是在添加一个新的人的时候，把他存入映射变量中
+        nameTofavorteNumber[_name] = _favoriteNumber;
+    }
+}
